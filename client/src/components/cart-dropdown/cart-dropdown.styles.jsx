@@ -11,7 +11,7 @@ export const CartDropdownComponent = styled.div`
   border: 1px solid black;
   background-color: white;
   top: 90px;
-  right: 60px;
+  right: 40px;
   z-index: 5;
 `;
 

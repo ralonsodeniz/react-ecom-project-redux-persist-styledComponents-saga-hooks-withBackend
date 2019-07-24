@@ -18,7 +18,8 @@ import { checkUserSession } from "./redux/user/user.action"; // in order to disp
 import { selectCurrentUser } from "./redux/user/user.selectors";
 // import { selectCollectionsForPreview } from "./redux/shop/shop.selectors"; | we only need this selector when we need to udpate collections in firestore | this selector returns an array with the objects of the different collections
 
-import "./App.css";
+// import "./App.css"
+import { GlobalStyle } from "./global.styles";
 
 const App = ({ checkUserSession, currentUser }) => {
   // since we don't need state anymore nor to use the props inside the constructor  we don't need them
@@ -76,6 +77,8 @@ const App = ({ checkUserSession, currentUser }) => {
 
   return (
     <div>
+      {/* first component we add is the GlobalStyle component to apply the styles inside globally */}
+      <GlobalStyle />
       <Header />
       <Switch>
         <Route exact path="/" component={HomePage} />
