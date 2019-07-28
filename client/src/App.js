@@ -1,13 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react"; // lazy for dynamic imports
 import { Switch, Route, Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { createStructuredSelector } from "reselect";
 
-import HomePage from "./pages/homepage/homepage.component";
-import ShopPage from "./pages/shop/shop.component";
+// import HomePage from "./pages/homepage/homepage.component";
+// import ShopPage from "./pages/shop/shop.component";
 import Header from "./components/header/header.component";
-import SignInAndUpPage from "./pages/sign-in-and-up/sign-in-and-up.component";
-import CheckoutPage from "./pages/checkout/checkout.component";
+import Spinner from "./components/spinner/spinner.component";
+import ErrorBoundary from "./components/error-boundary/error-boundary.component";
+// import SignInAndUpPage from "./pages/sign-in-and-up/sign-in-and-up.component";
+// import CheckoutPage from "./pages/checkout/checkout.component";
 // we dont need firebase utils anymore in App.js since we are doing all the auth related code in sagas
 // import {
 //   auth,
@@ -20,6 +22,21 @@ import { selectCurrentUser } from "./redux/user/user.selectors";
 
 // import "./App.css"
 import { GlobalStyle } from "./global.styles";
+
+// we declare the const component that we want to dynamically import and wrap it in lazy
+// lazy give us a functintion that calls the import to the route of the component we want dynamically import
+// this will replace the static import of HomePage
+const HomePage = lazy(() => import("./pages/homepage/homepage.component"));
+const ShopPage = lazy(() => import("./pages/shop/shop.component"));
+const SignInAndUpPage = lazy(() =>
+  import("./pages/sign-in-and-up/sign-in-and-up.component")
+);
+const CheckoutPage = lazy(() => import("./pages/checkout/checkout.component"));
+// because this is an async fucntion, depending on how fast the server is the user can encounter a blank page or even an error for a while during the lazy chunk is being loaded
+// Thats why we need to use use Suspense
+// Suspense is a new react component that allows us to wrap any part of our application that may be rendering asyncs components, lazy loaded components
+// Suspense takes a fallback property that is something to render meanwhile the lazy component is being rendered
+// Suspense can wrap multiple components that are being lazy loaded
 
 const App = ({ checkUserSession, currentUser }) => {
   // since we don't need state anymore nor to use the props inside the constructor  we don't need them
@@ -81,20 +98,25 @@ const App = ({ checkUserSession, currentUser }) => {
       <GlobalStyle />
       <Header />
       <Switch>
-        <Route exact path="/" component={HomePage} />
-        <Route path="/shop" component={ShopPage} />
-        {/* we keep /shop without exact because we want it to be rendered when we access to pages derivated from shop as /shop/hats etc to for example fetch our collection data from firestore */}
-        {/* the shop page is rendered and ontop of it renders the components of the categoryId */}
-        <Route
-          exact
-          path="/signin"
-          render={() =>
-            currentUser ? <Redirect to="/" /> : <SignInAndUpPage />
-          }
-        />
-        {/* what we have done here is to conditionally render one of two components depending if currentUser exists or not */}
-        {/* <Redirect> router component allow us to change the path of a route to a new one so we can avoid to show sign in page when a user is logged in */}
-        <Route exact path="/checkout" component={CheckoutPage} />
+        {/* if anything between the error boundary ever breaks it will be catched by it and will show the alternative render until it is solved */}
+        <ErrorBoundary>
+          <Suspense fallback={<Spinner />}>
+            <Route exact path="/" component={HomePage} />
+            <Route path="/shop" component={ShopPage} />
+            {/* we keep /shop without exact because we want it to be rendered when we access to pages derivated from shop as /shop/hats etc to for example fetch our collection data from firestore */}
+            {/* the shop page is rendered and ontop of it renders the components of the categoryId */}
+            <Route
+              exact
+              path="/signin"
+              render={() =>
+                currentUser ? <Redirect to="/" /> : <SignInAndUpPage />
+              }
+            />
+            {/* what we have done here is to conditionally render one of two components depending if currentUser exists or not */}
+            {/* <Redirect> router component allow us to change the path of a route to a new one so we can avoid to show sign in page when a user is logged in */}
+            <Route exact path="/checkout" component={CheckoutPage} />
+          </Suspense>
+        </ErrorBoundary>
       </Switch>
     </div>
   );
